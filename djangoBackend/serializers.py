@@ -29,6 +29,7 @@ class CentileModelSerializer(serializers.ModelSerializer):
 
 
 class VitalDataSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
     class Meta:
         model = VitalData
         fields = "__all__"

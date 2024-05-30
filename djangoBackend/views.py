@@ -11,8 +11,13 @@ class PatientViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Patient.objects.all()
-        if self.action == "restore" or "include_deleted" in self.request.query_params:
+        if (
+            self.action == "restore"
+            or self.request.query_params.get("filter") == "include_deleted"
+        ):
             return queryset
+        elif self.request.query_params.get("filter") == "only_deleted":
+            return queryset.filter(deleted_at__isnull=False)
         return queryset.filter(deleted_at__isnull=True)
 
     def destroy(self, request, *args, **kwargs):
@@ -34,15 +39,20 @@ class VitalDataViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = VitalData.objects.all()
-        if self.action == "restore" or "include_deleted" in self.request.query_params:
+        if (
+            self.action == "restore"
+            or self.request.query_params.get("filter") == "include_deleted"
+        ):
             return queryset
+        elif self.request.query_params.get("filter") == "only_deleted":
+            return queryset.filter(deleted_at__isnull=False)
         return queryset.filter(deleted_at__isnull=True)
 
     def destroy(self, request, *args, **kwargs):
         vital_data = self.get_object()
         vital_data.deleted_at = timezone.now()
         vital_data.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
     def restore(self, request, *args, **kwargs):
