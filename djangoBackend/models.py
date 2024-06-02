@@ -8,6 +8,7 @@ class Patient(models.Model):
     age = models.IntegerField()
     height = models.FloatField()
     weight = models.FloatField()
+    gender = models.CharField(max_length=255, default='Male')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True, editable=False)
@@ -24,6 +25,7 @@ class VitalData(models.Model):
     pulse = models.FloatField()
     systol = models.FloatField()
     diastol = models.FloatField()
+    temperature = models.FloatField(default=32)
     ews_score = models.FloatField(default=0, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -35,14 +37,16 @@ class VitalData(models.Model):
         dia_model = self.get_latest_percentiles("Diastol")
         rr_model = self.get_latest_percentiles("Respiration")
         o2_model = self.get_latest_percentiles("Oxygen")
+        temperature_model = self.get_latest_percentiles("Temperature")
 
         pulse_score = self.clustering(self.pulse, pulse_model)
         sys_score = self.clustering(self.systol, sys_model)
         dia_score = self.clustering(self.diastol, dia_model)
         rr_score = self.clustering(self.respiration_rate, rr_model)
         o2_score = self.clustering(self.oxygen_saturation, o2_model)
-        ews_score = pulse_score + sys_score + dia_score + rr_score + o2_score
-        return ews_score / 5
+        temperature_score = self.clustering(self.temperature, temperature_model)
+        ews_score = pulse_score + sys_score + dia_score + rr_score + o2_score + temperature_score
+        return ews_score / 6
 
     def clustering(self, vital_data, percentile_model):
         if vital_data < percentile_model[0] or vital_data > percentile_model[5]:
@@ -60,12 +64,24 @@ class VitalData(models.Model):
 
     def get_latest_percentiles(self, vital_model_name):
         return [
-            CentileModel.objects.filter(vital_model__name=vital_model_name).latest("created_at").first_percentile,
-            CentileModel.objects.filter(vital_model__name=vital_model_name).latest("created_at").fifth_percentile,
-            CentileModel.objects.filter(vital_model__name=vital_model_name).latest("created_at").tenth_percentile,
-            CentileModel.objects.filter(vital_model__name=vital_model_name).latest("created_at").ninetieth_percentile,
-            CentileModel.objects.filter(vital_model__name=vital_model_name).latest("created_at").ninetyfifth_percentile,
-            CentileModel.objects.filter(vital_model__name=vital_model_name).latest("created_at").ninetyninth_percentile,
+            CentileModel.objects.filter(vital_model__name=vital_model_name)
+            .latest("created_at")
+            .first_percentile,
+            CentileModel.objects.filter(vital_model__name=vital_model_name)
+            .latest("created_at")
+            .fifth_percentile,
+            CentileModel.objects.filter(vital_model__name=vital_model_name)
+            .latest("created_at")
+            .tenth_percentile,
+            CentileModel.objects.filter(vital_model__name=vital_model_name)
+            .latest("created_at")
+            .ninetieth_percentile,
+            CentileModel.objects.filter(vital_model__name=vital_model_name)
+            .latest("created_at")
+            .ninetyfifth_percentile,
+            CentileModel.objects.filter(vital_model__name=vital_model_name)
+            .latest("created_at")
+            .ninetyninth_percentile,
         ]
 
     def save(self, *args, **kwargs):

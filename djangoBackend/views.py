@@ -18,7 +18,8 @@ class PatientViewSet(viewsets.ModelViewSet):
             return queryset
         elif self.request.query_params.get("filter") == "only_deleted":
             return queryset.filter(deleted_at__isnull=False)
-        return queryset.filter(deleted_at__isnull=True)
+        else:
+            return queryset.filter(deleted_at__isnull=True)
 
     def destroy(self, request, *args, **kwargs):
         patient = self.get_object()
@@ -47,7 +48,7 @@ class VitalDataViewSet(viewsets.ModelViewSet):
         elif self.request.query_params.get("filter") == "only_deleted":
             return queryset.filter(deleted_at__isnull=False)
         return queryset.filter(deleted_at__isnull=True)
-
+    
     def destroy(self, request, *args, **kwargs):
         vital_data = self.get_object()
         vital_data.deleted_at = timezone.now()

@@ -21,15 +21,22 @@ class VitalModelSerializer(serializers.ModelSerializer):
 
 
 class CentileModelSerializer(serializers.ModelSerializer):
-    vital_model = VitalModelSerializer(read_only=True)
-
     class Meta:
         model = CentileModel
         fields = "__all__"
 
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response["vital_model"] = VitalModelSerializer(instance.vital_model).data
+        return response
+
 
 class VitalDataSerializer(serializers.ModelSerializer):
-    patient = PatientSerializer(read_only=True)
     class Meta:
         model = VitalData
         fields = "__all__"
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response["patient"] = PatientSerializer(instance.patient).data
+        return response
