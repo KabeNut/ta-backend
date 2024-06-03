@@ -48,7 +48,7 @@ class VitalDataViewSet(viewsets.ModelViewSet):
         elif self.request.query_params.get("filter") == "only_deleted":
             return queryset.filter(deleted_at__isnull=False)
         return queryset.filter(deleted_at__isnull=True)
-    
+
     def destroy(self, request, *args, **kwargs):
         vital_data = self.get_object()
         vital_data.deleted_at = timezone.now()
@@ -61,6 +61,37 @@ class VitalDataViewSet(viewsets.ModelViewSet):
         vital_data.deleted_at = None
         vital_data.save()
         return Response(status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        pulse_model = instance.get_latest_percentiles("Pulse")
+        sys_model = instance.get_latest_percentiles("Systol")
+        dia_model = instance.get_latest_percentiles("Diastol")
+        rr_model = instance.get_latest_percentiles("Respiration")
+        o2_model = instance.get_latest_percentiles("Oxygen")
+        temperature_model = instance.get_latest_percentiles("Temperature")
+
+        pulse_score = instance.clustering(instance.pulse, pulse_model)
+        sys_score = instance.clustering(instance.systol, sys_model)
+        dia_score = instance.clustering(instance.diastol, dia_model)
+        rr_score = instance.clustering(instance.respiration_rate, rr_model)
+        o2_score = instance.clustering(instance.oxygen_saturation, o2_model)
+        temperature_score = instance.clustering(instance.temperature, temperature_model)
+
+        calculations = {
+            "respiration_rate": rr_score,
+            "oxygen_saturation": o2_score,
+            "pulse": pulse_score,
+            "systol": sys_score,
+            "diastol": dia_score,
+            "temperature": temperature_score,
+        }
+
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        data["calculations"] = calculations
+        return Response(data)
 
 
 class CentileModelViewSet(viewsets.ModelViewSet):
