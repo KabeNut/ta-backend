@@ -76,7 +76,7 @@ class VitalDataViewSet(viewsets.ModelViewSet):
         sys_score = instance.clustering(instance.systol, sys_model)
         dia_score = instance.clustering(instance.diastol, dia_model)
         rr_score = instance.clustering(instance.respiration_rate, rr_model)
-        o2_score = instance.clustering(instance.oxygen_saturation, o2_model)
+        o2_score = instance.clustering_nonBell(instance.oxygen_saturation, o2_model)
         temperature_score = instance.clustering(instance.temperature, temperature_model)
 
         calculations = {

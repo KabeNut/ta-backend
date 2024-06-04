@@ -43,7 +43,7 @@ class VitalData(models.Model):
         sys_score = self.clustering(self.systol, sys_model)
         dia_score = self.clustering(self.diastol, dia_model)
         rr_score = self.clustering(self.respiration_rate, rr_model)
-        o2_score = self.clustering(self.oxygen_saturation, o2_model)
+        o2_score = self.clustering_nonBell(self.oxygen_saturation, o2_model)
         temperature_score = self.clustering(self.temperature, temperature_model)
         ews_score = pulse_score + sys_score + dia_score + rr_score + o2_score + temperature_score
         return ews_score / 6
@@ -59,6 +59,18 @@ class VitalData(models.Model):
             return 1
         elif vital_data > percentile_model[4] and vital_data < percentile_model[5]:
             return 2
+        else:
+            return 0
+
+    def clustering_nonBell(self, vital_data, percentile_model): # Function to cluster the data
+        if(vital_data < percentile_model[0]):
+            return 3
+        elif((vital_data >= percentile_model[0] and vital_data <= percentile_model[1])):
+            return 2
+        elif((vital_data >= percentile_model[1] and vital_data <= percentile_model[2])):
+            return 1
+        elif(vital_data >= percentile_model[2] and vital_data <= percentile_model[3]):
+            return 0
         else:
             return 0
 
